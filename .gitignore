@@ -1,3 +1,8 @@
-/.clang-format
 /.vscode
 /wxapp
+/image_editor
+/*.o
+/*.nph
+*.png
+/obj/
+/*.nprj
