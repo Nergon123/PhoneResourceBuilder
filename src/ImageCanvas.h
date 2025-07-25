@@ -52,6 +52,7 @@ struct Header {
     }
 };
 
+
 struct ImageData {
     uint16_t id;
     uint8_t  count;
@@ -70,18 +71,24 @@ struct ImageData {
     //    | +-------------- - Reserved (not used)
     //    +---------------- - Reserved (not used)
     uint16_t transpColor;
-
+    char name[32];
     ImageData()
-        : id(0), count(0), x(0), y(0), width(16), height(16), offset(0), flags(0), transpColor(0) {}
+        : id(0), count(0), x(0), y(0), width(16), height(16), offset(0), flags(0), transpColor(0),name("") {}
+        
     ImageData(uint16_t id, uint8_t count, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t offset, uint8_t flags, uint16_t transpColor)
-        : id(id), count(count), x(x), y(y), width(width), height(height), offset(offset), flags(flags), transpColor(transpColor) {}
-};
+        : id(id), count(count), x(x), y(y), width(width), height(height), offset(offset), flags(flags), transpColor(transpColor) ,name(""){}
 
+    ImageData(uint16_t id, uint8_t count, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t offset, uint8_t flags, uint16_t transpColor, const char* name)
+        : id(id), count(count), x(x), y(y), width(width), height(height), offset(offset), flags(flags), transpColor(transpColor) {
+        strncpy(this->name, name, sizeof(this->name) - 1);
+        this->name[sizeof(this->name) - 1] = '\0';
+    }
+};
 #pragma pack(pop)
 
 
 extern wxBitmap spriteSheet;
-extern const char* ImageNames[DEFAULTS_COUNT];
+extern const char ImageNames[32][DEFAULTS_COUNT];
 extern ImageData Defaults[DEFAULTS_COUNT];
 
 

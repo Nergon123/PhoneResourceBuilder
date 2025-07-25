@@ -23,6 +23,7 @@
 #include <wx/image.h>
 #include <wx/icon.h>
 #include <wx/sizer.h>
+#include <wx/textctrl.h>
 #include <wx/spinctrl.h>
 #include <wx/checkbox.h>
 #include <wx/slider.h>
@@ -48,6 +49,7 @@ class MyFrame1 : public wxFrame
 		wxButton* List_BIND;
 		wxButton* List_NEWIMAGE;
 		wxButton* List_DELETEIMAGE;
+		wxTextCtrl* nameTextCtrl;
 		wxBoxSizer* bSizer5;
 		wxStaticText* IDText;
 		wxStaticText* Description;
@@ -84,6 +86,7 @@ class MyFrame1 : public wxFrame
 		virtual void OnClkBindList( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnClkNewList( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnClkDelList( wxCommandEvent& event ) { event.Skip(); }
+		virtual void OnTextChange( wxCommandEvent& event ) { event.Skip(); }
 		virtual void OnUpdateID( wxSpinEvent& event ) { event.Skip(); }
 		virtual void OnUpdateCount( wxSpinEvent& event ) { event.Skip(); }
 		virtual void OnUpdateIndex( wxSpinEvent& event ) { event.Skip(); }

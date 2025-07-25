@@ -21,6 +21,11 @@ MainFrame::MainFrame(wxWindow* parent) : MyFrame1(parent) {
 }
 
 DraggableImage* MainFrame::GetSelectedImage() {
+    wxCheckListBox* check = currentImagesCheckList;
+    printf("GetSelectedImage: %p\n", check);
+    if(!currentImagesCheckList || currentImagesCheckList->GetCount() == 0) {
+        return nullptr;
+    }
     int sel = currentImagesCheckList->GetSelection();
     if (sel == wxNOT_FOUND)
         return nullptr;
@@ -45,6 +50,7 @@ void MainFrame::UnpackImageData(DraggableImage* img) {
     TransCBox->SetValue(data->flags & 1);
     transpSlider->Enable(!img->includedInFile);
     includeInExport->SetValue(img->includedInFile);
+    nameTextCtrl->SetValue(GetImageName(img));
     RGBStatus->SetLabelText(wxString::Format("RGB565 0x%04x", data->transpColor));
     ColorPicker->SetColour(RGB565ToWxColour(data->transpColor));
 }
@@ -150,20 +156,34 @@ void MainFrame::OnClkNewList(wxCommandEvent& event) {
         if (!img) return;
         DraggableImage* newImg = new DraggableImage(*img);
         int             id     = newImg->data.id;
-        currentImagesCheckList->Append(wxString::Format("[%d] %s", id, ImageNames[id]), newImg);  // Attach client data
+        currentImagesCheckList->Append(wxString::Format("[%d] %s", id, GetImageName(newImg)), newImg);  // Attach client data
         currentImagesCheckList->Check(currentImagesCheckList->GetCount() - 1, img->enabled);
         canvas->AddDraggableImage(newImg);
     } else {
         int             id     = currentImagesCheckList->GetCount();
         ImageData       data   = ImageData((id >= 0 && id < (int)(sizeof(ImageNames) / sizeof(ImageNames[0]))) ? Defaults[id] : ImageData());
         DraggableImage* idData = new DraggableImage(wxBitmap(data.width, data.height * data.count), wxPoint(0, 0), data, 0, id);
-        currentImagesCheckList->Append(wxString::Format("[%d] %s", id,
-                                                        (id >= 0 && id < (int)(sizeof(ImageNames) / sizeof(ImageNames[0])))
-                                                            ? ImageNames[id]
-                                                            : "New Image"),
-                                       idData);  // Attach client data
+        currentImagesCheckList->Append(wxString::Format("[%d] %s", id, GetImageName(idData)), idData);  // Attach client data
         canvas->AddDraggableImage(idData);
     }
+    Refresh();
+}
+
+void MainFrame::OnTextChange(wxCommandEvent& event) {
+    DraggableImage* img = GetSelectedImage();
+    if (!img) {
+        nameTextCtrl->SetValue(wxEmptyString);
+        return;
+    }
+    if (event.GetString().IsEmpty()) {
+        strncpy(img->data.name, img->data.id > 0 && img->data.id < (int)(sizeof(ImageNames) / sizeof(ImageNames[0])) ? ImageNames[img->data.id] : "Unnamed/Custom", sizeof(img->data.name) - 1);
+        return;
+    }
+    strncpy(img->data.name, event.GetString().ToStdString().c_str(), sizeof(img->data.name) - 1);
+
+    RenameSelectedItem(currentImagesCheckList, wxString::Format("[%d] %s", img->data.id, GetImageName(img)));
+    Description->SetLabelText(wxString::Format("%s", GetImageName(img)));
+    canvas->Refresh();
     Refresh();
 }
 
@@ -220,11 +240,22 @@ void MainFrame::OnUpdateID(wxSpinEvent& event) {
         img->bitmap = wxBitmap(img->data.width, img->data.height);
     }
     UnpackImageData(img);
-    Description->SetLabelText(img->data.id >= 0 && img->data.id < (int)(sizeof(ImageNames) / sizeof(ImageNames[0]))
-                                  ? ImageNames[img->data.id]
-                                  : "Unknown/Custom");
-    RenameSelectedItem(currentImagesCheckList, wxString::Format("[%d] %s", img->data.id, (img->data.id >= 0 && img->data.id < (int)(sizeof(ImageNames) / sizeof(ImageNames[0]))) ? ImageNames[img->data.id] : "New Image"));
+    Description->SetLabelText(GetImageName());
+    RenameSelectedItem(currentImagesCheckList, wxString::Format("[%d] %s", img->data.id, GetImageName()));
     Refresh();
+}
+
+wxString MainFrame::GetImageName(DraggableImage* img /* = nullptr */) {
+    if (!img) img = GetSelectedImage();
+    if (!img) return "Unknown/Custom";
+    if (img->data.name[0] != '\0') {
+        return wxString::FromUTF8(img->data.name);
+    }
+    int index = img->data.id;
+    if (index >= 0 && index < (int)(sizeof(ImageNames) / sizeof(ImageNames[0]))) {
+        return ImageNames[index];
+    }
+    return "Unknown/Custom";
 }
 
 void MainFrame::OnUpdateCount(wxSpinEvent& event) {

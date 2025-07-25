@@ -22,69 +22,68 @@ wxColour RGB565ToWxColour(uint16_t rgb565) {
     return wxColour(r8, g8, b8);
 }
 
-
- const char* ImageNames[DEFAULTS_COUNT] = {
-    "Default Wallpaper",                               // 0
-    "StatusBar Background",                            // 1
-    "Battery charge",                                  // 2
-    "Signal Strength",                                 // 3
-    "No Signal",                                       // 4
-    "Menu Background",                                 // 5
-    "Menu Mail Icon",                                  // 6
-    "Menu Contacts Icon",                              // 7
-    "Menu \"e\" Icon",                                 // 8
-    "Menu Settings Icon",                              // 9
-    "Menu Header Background",                          // 10
-    "Menu Header Icons",                               // 11
-    "Inner Mail Icons",                                // 12
-    "List Mail Icons",                                 // 13
-    "Mail Menu Large Header",                          // 14
-    "Settings Menu Large Header",                      // 15
-    "Menu (To use with Large Header)",                 // 16
-    "Full screen Notification",                        // 17
-    "Context Menu Background",                         // 18
-    "Background of ListMenu",                          // 19
-    "Menu Background (without Icons(To be removed))",  // 20
-    "Call animation dots",                             // 21
-    "Voice Only label",                                // 22
-    "Phone incoming call icon",                        // 23
-    "Lightning incoming call animation",               // 24
-    "Folder icon",                                     // 25
-    "File icon",                                       // 26
-    "Boot Logo"                                        // 27
+const char ImageNames[32][DEFAULTS_COUNT] = {
+    "Default Wallpaper",            // 0
+    "StatusBar Background",         // 1
+    "Battery charge",               // 2
+    "Signal Strength",              // 3
+    "No Signal",                    // 4
+    "Menu Background",              // 5
+    "Menu Mail Icon",               // 6
+    "Menu Contacts Icon",           // 7
+    "Menu \"e\" Icon",              // 8
+    "Menu Settings Icon",           // 9
+    "Menu Header Background",       // 10
+    "Menu Header Icons",            // 11
+    "Inner Mail Icons",             // 12
+    "List Mail Icons",              // 13
+    "Mail Menu Large Header",       // 14
+    "Settings Menu Large Header",   // 15
+    "Menu Large Header",            // 16
+    "Full screen Notification",     // 17
+    "Context Menu Background",      // 18
+    "Background of ListMenu",       // 19
+    "Menu Background (Unused)",     // 20
+    "Call animation dots",          // 21
+    "Voice Only label",             // 22
+    "Phone incoming call icon",     // 23
+    "Lightning for incoming call",  // 24
+    "Folder icon",                  // 25
+    "File icon",                    // 26
+    "Boot Logo"                     // 27
 };
 
 // clang-format off
 ImageData Defaults[DEFAULTS_COUNT] = {
-    //       ( id | count |  x  |  y  | width | height | offset | flags | transpColor )
-    ImageData( 0,     1,    0,     26,   240,    294,      0,     0b00,      0x0000   ),      // Default Wallpaper
-    ImageData( 1,     1,    0,     0,    240,    26,       0,     0b00,      0x0000   ),      // StatusBar Background
-    ImageData( 2,     4,    207,   0,    33,     26,       0,     0b00,      0x0000   ),      // Battery charge
-    ImageData( 3,     4,    0,     0,    30,     26,       0,     0b00,      0x0000   ),      // Signal Strength
-    ImageData( 4,     1,    0,     0,    37,     26,       0,     0b00,      0x0000   ),      // No Signal
-    ImageData( 5,     1,    0,     26,   240,    294,      0,     0b00,      0x0000   ),      // Menu Background
-    ImageData( 6,     2,    49,    69,   55,     55,       0,     0b00,      0x07E0   ),      // Menu Mail Icon
-    ImageData( 7,     2,    138,   69,   55,     55,       0,     0b00,      0x07E0   ),      // Menu Contacts Icon
-    ImageData( 8,     2,    49,    148,  55,     55,       0,     0b00,      0x07E0   ),      // Menu "e" Icon
-    ImageData( 9,     2,    138,   148,  55,     55,       0,     0b00,      0x07E0   ),      // Menu Settings Icon
-    ImageData( 10,    1,    0,     26,   240,    25,       0,     0b00,      0x0000   ),      // Menu Header Background
-    ImageData( 11,    3,    0,     26,   25,     25,       0,     0b00,      0x0000   ),      // Menu Header Icons
-    ImageData( 12,    4,    0,     0,    23,     24,       0,     0b10,      0x0000   ),      // Inner Mail Icons
-    ImageData( 13,    4,    0,     0,    18,     21,       0,     0b11,      0x0000   ),      // List Mail Icons
-    ImageData( 14,    1,    0,     26,   240,    42,       0,     0b00,      0x0000   ),      // Mail Menu Large Header
-    ImageData( 15,    1,    0,     26,   240,    42,       0,     0b00,      0x0000   ),      // Settings Menu Large Header
-    ImageData( 16,    1,    0,     68,   240,    128,      0,     0b00,      0x0000   ),      // Menu (To use with Large Header)
-    ImageData( 17,    1,    0,     90,   240,    134,      0,     0b00,      0x0000   ),      // Full screen Notification
-    ImageData( 18,    1,    16,    100,  208,    123,      0,     0b01,      0x07E0   ),      // Context Menu Background
-    ImageData( 19,    1,    0,     26,   240,    294,      0,     0b00,      0x0000   ),      // Background of ListMenu
-    ImageData( 20,    1,    0,     26,   240,    294,      0,     0b00,      0x0000   ),      // Menu Background (without Icons(To be removed))
-    ImageData( 21,    8,    0,     0,    7,      7,        0,     0b10,      0x0000   ),      // Call animation dots
-    ImageData( 22,    1,    40,    143,  160,    34,       0,     0b00,      0x0000   ),      // Voice Only label
-    ImageData( 23,    1,    45,    105,  42,     50,       0,     0b01,      0xD6BA   ),      // Phone incoming call icon
-    ImageData( 24,    2,    73,    90,   13,     14,       0,     0b01,      0xD6BA   ),      // Lightning incoming call animation
-    ImageData( 25,    1,    0,     0,    18,     18,       0,     0b11,      0x0000   ),      // Folder icon //TODO CHECK TRANSPARENCY
-    ImageData( 26,    1,    0,     0,    18,     18,       0,     0b11,      0x0000   ),      // File icon   //TODO CHECK TRANSPARENCY
-    ImageData( 27,    1,    50,    85,   140,    135,      0,     0b00,      0x0000   )       // Boot Logo
+    //       ( id | count |  x  |  y  | width | height | offset | flags | transpColor |    name     )
+    ImageData( 0,     1,    0,     26,   240,    294,      0,     0b00,      0x0000   ,ImageNames[0]),       // Default Wallpaper
+    ImageData( 1,     1,    0,     0,    240,    26,       0,     0b00,      0x0000   ,ImageNames[1]),       // StatusBar Background
+    ImageData( 2,     4,    207,   0,    33,     26,       0,     0b00,      0x0000   ,ImageNames[2]),       // Battery charge
+    ImageData( 3,     4,    0,     0,    30,     26,       0,     0b00,      0x0000   ,ImageNames[3]),       // Signal Strength
+    ImageData( 4,     1,    0,     0,    37,     26,       0,     0b00,      0x0000   ,ImageNames[4]),       // No Signal
+    ImageData( 5,     1,    0,     26,   240,    294,      0,     0b00,      0x0000   ,ImageNames[5]),       // Menu Background
+    ImageData( 6,     2,    49,    69,   55,     55,       0,     0b00,      0x07E0   ,ImageNames[6]),       // Menu Mail Icon
+    ImageData( 7,     2,    138,   69,   55,     55,       0,     0b00,      0x07E0   ,ImageNames[7]),       // Menu Contacts Icon
+    ImageData( 8,     2,    49,    148,  55,     55,       0,     0b00,      0x07E0   ,ImageNames[8]),       // Menu "e" Icon
+    ImageData( 9,     2,    138,   148,  55,     55,       0,     0b00,      0x07E0   ,ImageNames[9]),       // Menu Settings Icon
+    ImageData( 10,    1,    0,     26,   240,    25,       0,     0b00,      0x0000   ,ImageNames[10]),      // Menu Header Background
+    ImageData( 11,    3,    0,     26,   25,     25,       0,     0b00,      0x0000   ,ImageNames[11]),      // Menu Header Icons
+    ImageData( 12,    4,    0,     0,    23,     24,       0,     0b10,      0x0000   ,ImageNames[12]),      // Inner Mail Icons
+    ImageData( 13,    4,    0,     0,    18,     21,       0,     0b11,      0x0000   ,ImageNames[13]),      // List Mail Icons
+    ImageData( 14,    1,    0,     26,   240,    42,       0,     0b00,      0x0000   ,ImageNames[14]),      // Mail Menu Large Header
+    ImageData( 15,    1,    0,     26,   240,    42,       0,     0b00,      0x0000   ,ImageNames[15]),      // Settings Menu Large Header
+    ImageData( 16,    1,    0,     68,   240,    128,      0,     0b00,      0x0000   ,ImageNames[16]),      // Menu (To use with Large Header)
+    ImageData( 17,    1,    0,     90,   240,    134,      0,     0b00,      0x0000   ,ImageNames[17]),      // Full screen Notification
+    ImageData( 18,    1,    16,    100,  208,    123,      0,     0b01,      0x07E0   ,ImageNames[18]),      // Context Menu Background
+    ImageData( 19,    1,    0,     26,   240,    294,      0,     0b00,      0x0000   ,ImageNames[19]),      // Background of ListMenu
+    ImageData( 20,    1,    0,     26,   240,    294,      0,     0b00,      0x0000   ,ImageNames[20]),      // Menu Background (without Icons(To be removed))
+    ImageData( 21,    8,    0,     0,    7,      7,        0,     0b10,      0x0000   ,ImageNames[21]),      // Call animation dots
+    ImageData( 22,    1,    40,    143,  160,    34,       0,     0b00,      0x0000   ,ImageNames[22]),      // Voice Only label
+    ImageData( 23,    1,    45,    105,  42,     50,       0,     0b01,      0xD6BA   ,ImageNames[23]),      // Phone incoming call icon
+    ImageData( 24,    2,    73,    90,   13,     14,       0,     0b01,      0xD6BA   ,ImageNames[24]),      // Lightning incoming call animation
+    ImageData( 25,    1,    0,     0,    18,     18,       0,     0b11,      0x0000   ,ImageNames[25]),      // Folder icon //TODO CHECK TRANSPARENCY
+    ImageData( 26,    1,    0,     0,    18,     18,       0,     0b11,      0x0000   ,ImageNames[26]),      // File icon   //TODO CHECK TRANSPARENCY
+    ImageData( 27,    1,    50,    85,   140,    135,      0,     0b00,      0x0000   ,ImageNames[27])       // Boot Logo
 };
 
 ImageCanvas::ImageCanvas(wxWindow* parent)

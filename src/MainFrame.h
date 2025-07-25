@@ -22,6 +22,8 @@ public:
 
 protected:
     void SetAlphaOfImage(wxBitmap& image, uint8_t transpValue);
+ void OnTextChange( wxCommandEvent& event ) override;
+    wxString GetImageName(DraggableImage* img = nullptr);
     void OnIncludeInFileBox(wxCommandEvent& event) override;
     void OnTranspSlider(wxScrollEvent& event ) override;
     void OnImagesListToggle(wxCommandEvent& event) override;

@@ -206,6 +206,7 @@ bool FileProcessing::SaveToFile(const std::vector<DraggableImage*>& images, bool
     out.write(reinterpret_cast<const char*>(&imageCount), sizeof(imageCount));
 
     for (const auto& img : images) {
+      
         // Write ImageData
         out.write(reinterpret_cast<const char*>(&img->data), sizeof(ImageData));
 

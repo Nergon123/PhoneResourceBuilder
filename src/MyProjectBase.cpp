@@ -56,6 +56,17 @@ MyFrame1::MyFrame1( wxWindow* parent, wxWindowID id, const wxString& title, cons
 
 	bSizer1->Add( gSizer4, 1, wxEXPAND, 5 );
 
+	nameTextCtrl = new wxTextCtrl( this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0 );
+	#ifdef __WXGTK__
+	if ( !nameTextCtrl->HasFlag( wxTE_MULTILINE ) )
+	{
+	nameTextCtrl->SetMaxLength( 31 );
+	}
+	#else
+	nameTextCtrl->SetMaxLength( 31 );
+	#endif
+	bSizer1->Add( nameTextCtrl, 0, wxALL|wxEXPAND, 5 );
+
 
 	gSizer2->Add( bSizer1, 1, wxEXPAND, 5 );
 
@@ -232,6 +243,7 @@ MyFrame1::MyFrame1( wxWindow* parent, wxWindowID id, const wxString& title, cons
 	List_BIND->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MyFrame1::OnClkBindList ), NULL, this );
 	List_NEWIMAGE->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MyFrame1::OnClkNewList ), NULL, this );
 	List_DELETEIMAGE->Connect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( MyFrame1::OnClkDelList ), NULL, this );
+	nameTextCtrl->Connect( wxEVT_COMMAND_TEXT_UPDATED, wxCommandEventHandler( MyFrame1::OnTextChange ), NULL, this );
 	IDCtrl->Connect( wxEVT_COMMAND_SPINCTRL_UPDATED, wxSpinEventHandler( MyFrame1::OnUpdateID ), NULL, this );
 	CountControl->Connect( wxEVT_COMMAND_SPINCTRL_UPDATED, wxSpinEventHandler( MyFrame1::OnUpdateCount ), NULL, this );
 	IndexControl->Connect( wxEVT_COMMAND_SPINCTRL_UPDATED, wxSpinEventHandler( MyFrame1::OnUpdateIndex ), NULL, this );
