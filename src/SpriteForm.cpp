@@ -339,6 +339,14 @@ void SpriteForm::LimitCoord(IndexCoords& coord) {
 }
 void SpriteForm::OnYChange(wxSpinEvent& event) {
     IndexCoords coord = GetCoords(currentIndex);
+        if (wxGetKeyState(WXK_SHIFT)) {
+        // More shifty thingy
+        // move every cell by the same amount
+        for (IndexCoords coordr : dragImage->indexCoords) {
+            coordr.y -= coord.y - event.GetValue();
+            SetCoords(coordr);
+        }
+    }
     coord.y           = event.GetValue();
     SetCoords(coord);
     Refresh();
@@ -399,7 +407,7 @@ void SpriteForm::OnLeftMDown(wxMouseEvent& event) {
             coord.x = event.GetPosition().x - offset.x;
             coord.y = event.GetPosition().y - offset.y;
             SetCoords(coord);
-
+            UpdateFields(); 
             Refresh();
         }
     }

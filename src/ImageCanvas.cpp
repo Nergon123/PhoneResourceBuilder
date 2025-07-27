@@ -4,13 +4,16 @@ wxDEFINE_EVENT(EVT_COLOR_PICKED, wxCommandEvent);
 wxBitmap spriteSheet = wxBitmap();
 
 uint16_t wxColourToRGB565(const wxColour& col) {
-    uint16_t r = (col.Red() >> 3) & 0x1F;
-    uint16_t g = (col.Green() >> 2) & 0x3F;
-    uint16_t b = (col.Blue() >> 3) & 0x1F;
-    return (r << 11) | (g << 5) | b;
+    uint16_t color = ((col.Red() >> 3) << 11) |
+                     ((col.Green() >> 2) << 5) |
+                     (col.Blue() >> 3);
+                     
+    return (color << 8) | (color >> 8);
 }
 
 wxColour RGB565ToWxColour(uint16_t rgb565) {
+    rgb565 = (rgb565 >> 8) | (rgb565 << 8);
+
     uint8_t r5 = (rgb565 >> 11) & 0x1F;
     uint8_t g6 = (rgb565 >> 5) & 0x3F;
     uint8_t b5 = rgb565 & 0x1F;
@@ -33,8 +36,8 @@ const char ImageNames[32][DEFAULTS_COUNT] = {
     "Menu Contacts Icon",           // 7
     "Menu \"e\" Icon",              // 8
     "Menu Settings Icon",           // 9
-    "Menu Header Background",       // 10
-    "Menu Header Icons",            // 11
+    "List Header Background",       // 10
+    "List Header Icons",            // 11
     "Inner Mail Icons",             // 12
     "List Mail Icons",              // 13
     "Mail Menu Large Header",       // 14
@@ -66,9 +69,9 @@ ImageData Defaults[DEFAULTS_COUNT] = {
     ImageData( 7,     2,    138,   69,   55,     55,       0,     0b00,      0x07E0   ,ImageNames[7]),       // Menu Contacts Icon
     ImageData( 8,     2,    49,    148,  55,     55,       0,     0b00,      0x07E0   ,ImageNames[8]),       // Menu "e" Icon
     ImageData( 9,     2,    138,   148,  55,     55,       0,     0b00,      0x07E0   ,ImageNames[9]),       // Menu Settings Icon
-    ImageData( 10,    1,    0,     26,   240,    25,       0,     0b00,      0x0000   ,ImageNames[10]),      // Menu Header Background
-    ImageData( 11,    3,    0,     26,   25,     25,       0,     0b00,      0x0000   ,ImageNames[11]),      // Menu Header Icons
-    ImageData( 12,    4,    0,     0,    23,     24,       0,     0b10,      0x0000   ,ImageNames[12]),      // Inner Mail Icons
+    ImageData( 10,    1,    0,     26,   240,    25,       0,     0b00,      0x0000   ,ImageNames[10]),      // List Header Background
+    ImageData( 11,    3,    0,     26,   25,     25,       0,     0b00,      0x0000   ,ImageNames[11]),      // List Header Icons
+    ImageData( 12,    4,    0,     0,    23,     24,       0,     0b10,      0x0000   ,ImageNames[12]),      // In-message Mail Icons
     ImageData( 13,    4,    0,     0,    18,     21,       0,     0b11,      0x0000   ,ImageNames[13]),      // List Mail Icons
     ImageData( 14,    1,    0,     26,   240,    42,       0,     0b00,      0x0000   ,ImageNames[14]),      // Mail Menu Large Header
     ImageData( 15,    1,    0,     26,   240,    42,       0,     0b00,      0x0000   ,ImageNames[15]),      // Settings Menu Large Header

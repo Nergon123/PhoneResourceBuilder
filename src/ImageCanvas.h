@@ -28,13 +28,12 @@
 uint16_t wxColourToRGB565(const wxColour& col);
 wxColour RGB565ToWxColour(uint16_t rgb565);
 
-
 #pragma pack(push, 1)
-struct IndexCoords{
-	int id;
-	int index;
-	int x;
-	int y;
+struct IndexCoords {
+    int id;
+    int index;
+    int x;
+    int y;
 };
 struct Header {
     const char MAGIC[6] = "NerPh";
@@ -51,7 +50,6 @@ struct Header {
         }
     }
 };
-
 
 struct ImageData {
     uint16_t id;
@@ -71,12 +69,15 @@ struct ImageData {
     //    | +-------------- - Reserved (not used)
     //    +---------------- - Reserved (not used)
     uint16_t transpColor;
-    char name[32];
+    char     name[32];
+
     ImageData()
-        : id(0), count(0), x(0), y(0), width(16), height(16), offset(0), flags(0), transpColor(0),name("") {}
-        
+        : id(0), count(1), x(0), y(0), width(16), height(16), offset(0), flags(0), transpColor(0), name("") {}
+    ImageData(uint16_t id)
+        : id(id), count(1), x(0), y(0), width(16), height(16), offset(0), flags(0), transpColor(0), name("") {}
+
     ImageData(uint16_t id, uint8_t count, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t offset, uint8_t flags, uint16_t transpColor)
-        : id(id), count(count), x(x), y(y), width(width), height(height), offset(offset), flags(flags), transpColor(transpColor) ,name(""){}
+        : id(id), count(count), x(x), y(y), width(width), height(height), offset(offset), flags(flags), transpColor(transpColor), name("") {}
 
     ImageData(uint16_t id, uint8_t count, uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint32_t offset, uint8_t flags, uint16_t transpColor, const char* name)
         : id(id), count(count), x(x), y(y), width(width), height(height), offset(offset), flags(flags), transpColor(transpColor) {
@@ -86,35 +87,25 @@ struct ImageData {
 };
 #pragma pack(pop)
 
-
-extern wxBitmap spriteSheet;
+extern wxBitmap   spriteSheet;
 extern const char ImageNames[32][DEFAULTS_COUNT];
-extern ImageData Defaults[DEFAULTS_COUNT];
-
-
-
+extern ImageData  Defaults[DEFAULTS_COUNT];
 
 struct DraggableImage {
-    wxBitmap  bitmap;
-    wxPoint   pos;
-    ImageData data;
-    uint8_t   index          = 0;
-    int       listIndex      = 0;
-    bool      enabled        = false;
-    bool      includedInFile = true;
-    bool      selected       = false;
-    wxSize    spriteSheetSize;
+    wxBitmap                 bitmap;
+    wxPoint                  pos;
+    ImageData                data;
+    uint8_t                  index          = 0;
+    int                      listIndex      = 0;
+    bool                     enabled        = false;
+    bool                     includedInFile = true;
+    bool                     selected       = false;
+    wxSize                   spriteSheetSize;
     std::vector<IndexCoords> indexCoords;
     DraggableImage(wxBitmap bitmap, wxPoint pos, ImageData data, uint8_t index = 0, int listIndex = 0, bool enabled = false, bool includedInFile = true) : bitmap(bitmap), pos(pos), data(data), index(index), listIndex(listIndex), enabled(enabled), includedInFile(includedInFile) {}
 };
 
-
-
-
 // The ImageCanvas class
-
-
-
 
 class ImageCanvas : public wxPanel {
    public:
@@ -143,7 +134,6 @@ class ImageCanvas : public wxPanel {
     void OnMouseRightDown(wxMouseEvent& event);
 
    private:
-
     bool    dragging = false;
     wxPoint dragStartMousePos;
     wxPoint dragStartImgPos;
@@ -154,4 +144,4 @@ class ImageCanvas : public wxPanel {
     void AddAllFrames(const ImageData& d, const wxBitmap& fullBitmap, const wxPoint& basePos);
 };
 
-#endif // IMAGE_CANVAS_H
+#endif  // IMAGE_CANVAS_H

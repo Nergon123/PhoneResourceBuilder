@@ -22,10 +22,9 @@ FileProcessing::FileProcessing() {
 }
 
 void FileProcessing::ExportFile(std::vector<DraggableImage*> ExportImages) {
-
-    currentOffset           = 0;  // Reset offset for each export
+    currentOffset = 0;  // Reset offset for each export
     std::vector<DraggableImage*> images;
-    for(DraggableImage* img : ExportImages) {
+    for (DraggableImage* img : ExportImages) {
         if (!img || !img->includedInFile) {
             continue;
         }
@@ -76,7 +75,6 @@ void FileProcessing::ExportFile(std::vector<DraggableImage*> ExportImages) {
         wxLogError("Error writing image pixel data to file: %s", fileName);
         return;
     }
-
 }
 
 void FileProcessing::ExportImage(DraggableImage* img) {
@@ -206,7 +204,6 @@ bool FileProcessing::SaveToFile(const std::vector<DraggableImage*>& images, bool
     out.write(reinterpret_cast<const char*>(&imageCount), sizeof(imageCount));
 
     for (const auto& img : images) {
-      
         // Write ImageData
         out.write(reinterpret_cast<const char*>(&img->data), sizeof(ImageData));
 
@@ -232,12 +229,12 @@ bool FileProcessing::SaveToFile(const std::vector<DraggableImage*>& images, bool
         // Save bitmap as RGB image (wxImage)
         wxImage image = img->bitmap.ConvertToImage();
         if (!image.HasAlpha()) image.InitAlpha();
-        const unsigned char* rgb   = image.GetData();   
-        const unsigned char* alpha = image.GetAlpha(); 
-    
+        const unsigned char* rgb   = image.GetData();
+        const unsigned char* alpha = image.GetAlpha();
+
         std::vector<unsigned char> rgba(image.GetWidth() * image.GetHeight() * 4);
         // Apparently GetData has only RGB, without alpha channel
-        // So we kinda need to append alpha channel to every pixel 
+        // So we kinda need to append alpha channel to every pixel
         for (int i = 0, j = 0; i < image.GetWidth() * image.GetHeight(); ++i, j += 4) {
             rgba[j]     = rgb[i * 3 + 0];
             rgba[j + 1] = rgb[i * 3 + 1];
@@ -325,7 +322,7 @@ bool FileProcessing::LoadFromFile(std::vector<DraggableImage*>& images) {
             wxLogError("Failed to read RGBA data from file.");
             continue;
         }
-        
+
         for (uint i = 0, j = 0; i < width * height; ++i, j += 4) {
             int x = i % width;
             int y = i / width;
@@ -362,9 +359,7 @@ std::vector<uint16_t> FileProcessing::ConvertWxImageToRGB565(const wxImage& imag
             uint8_t b     = rgbData[index + 2];
 
             // Convert to RGB565
-            uint16_t rgb565 = ((r & 0xF8) << 8) |  // 5 bits red
-                              ((g & 0xFC) << 3) |  // 6 bits green
-                              (b >> 3);            // 5 bits blue
+            uint16_t rgb565 = wxColourToRGB565(wxColor(r, g, b)); 
 
             rgb565Data.push_back(rgb565);
         }

@@ -21,9 +21,7 @@ MainFrame::MainFrame(wxWindow* parent) : MyFrame1(parent) {
 }
 
 DraggableImage* MainFrame::GetSelectedImage() {
-    wxCheckListBox* check = currentImagesCheckList;
-    printf("GetSelectedImage: %p\n", check);
-    if(!currentImagesCheckList || currentImagesCheckList->GetCount() == 0) {
+    if (!currentImagesCheckList || currentImagesCheckList->GetCount() == 0) {
         return nullptr;
     }
     int sel = currentImagesCheckList->GetSelection();
@@ -63,10 +61,12 @@ void MainFrame::EnableControls() {
     DraggableImage* img = GetSelectedImage();
     if (!img) return;
     EnableControlsInSizer(bSizer5);
+    nameTextCtrl->Enable();
 }
 
 void MainFrame::DisableControls() {
     DisableControlsInSizer(bSizer5);
+    nameTextCtrl->Disable();
 }
 
 void MainFrame::OnImagesListToggle(wxCommandEvent& event) {
@@ -140,7 +140,9 @@ void MainFrame::OnExportAllPNG(wxCommandEvent& event) {
 }
 
 void MainFrame::OnExport(wxCommandEvent& event) {
+    if(!CheckTransparentImages()){
     fileProcessor.ExportFile(canvas->images);
+    }
 }
 
 void MainFrame::OnExportPNG(wxCommandEvent& event) {
@@ -161,7 +163,7 @@ void MainFrame::OnClkNewList(wxCommandEvent& event) {
         canvas->AddDraggableImage(newImg);
     } else {
         int             id     = currentImagesCheckList->GetCount();
-        ImageData       data   = ImageData((id >= 0 && id < (int)(sizeof(ImageNames) / sizeof(ImageNames[0]))) ? Defaults[id] : ImageData());
+        ImageData       data   = ImageData((id >= 0 && id < (int)(sizeof(ImageNames) / sizeof(ImageNames[0]))) ? Defaults[id] : ImageData(id));
         DraggableImage* idData = new DraggableImage(wxBitmap(data.width, data.height * data.count), wxPoint(0, 0), data, 0, id);
         currentImagesCheckList->Append(wxString::Format("[%d] %s", id, GetImageName(idData)), idData);  // Attach client data
         canvas->AddDraggableImage(idData);
@@ -182,7 +184,6 @@ void MainFrame::OnTextChange(wxCommandEvent& event) {
     strncpy(img->data.name, event.GetString().ToStdString().c_str(), sizeof(img->data.name) - 1);
 
     RenameSelectedItem(currentImagesCheckList, wxString::Format("[%d] %s", img->data.id, GetImageName(img)));
-    Description->SetLabelText(wxString::Format("%s", GetImageName(img)));
     canvas->Refresh();
     Refresh();
 }
@@ -240,18 +241,18 @@ void MainFrame::OnUpdateID(wxSpinEvent& event) {
         img->bitmap = wxBitmap(img->data.width, img->data.height);
     }
     UnpackImageData(img);
-    Description->SetLabelText(GetImageName());
-    RenameSelectedItem(currentImagesCheckList, wxString::Format("[%d] %s", img->data.id, GetImageName()));
+    Description->SetLabelText(GetImageName(nullptr, id));
+    RenameSelectedItem(currentImagesCheckList, wxString::Format("[%d] %s", img->data.id, GetImageName(img)));
     Refresh();
 }
 
-wxString MainFrame::GetImageName(DraggableImage* img /* = nullptr */) {
-    if (!img) img = GetSelectedImage();
-    if (!img) return "Unknown/Custom";
-    if (img->data.name[0] != '\0') {
+wxString MainFrame::GetImageName(DraggableImage* img /* = nullptr */, int id) {
+    if (!img && id == -1) img = GetSelectedImage();
+    if (!img && id == -1) return "Unknown/Custom";
+    if (img && img->data.name[0] != '\0') {
         return wxString::FromUTF8(img->data.name);
     }
-    int index = img->data.id;
+    int index = img ? img->data.id : id;
     if (index >= 0 && index < (int)(sizeof(ImageNames) / sizeof(ImageNames[0]))) {
         return ImageNames[index];
     }
@@ -396,7 +397,7 @@ void MainFrame::OnHardBake(wxCommandEvent& event) {
 
     const ImageData& region = img->data;
     const int        width  = region.width;
-    const int        height = region.height;
+    const int        height = region.height * region.count;
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             if (x < 0 || y < 0 || x >= imgData.GetWidth() || y >= imgData.GetHeight())
@@ -418,8 +419,11 @@ void MainFrame::OnBakeImage(wxCommandEvent& event) {
 
     const ImageData& region = img->data;
     wxImage          imgData;
-    imgData.Clear();  // For some reason this thing without this line is taking previous image data
-    imgData = img->bitmap.ConvertToImage();
+    if (imgData.IsOk()) {
+        imgData.Clear();  // For some reason this thing without this line is taking previous image data
+    }
+    wxBitmap bmp = img->bitmap.GetSubBitmap(wxRect(0, region.height * IndexControl->GetValue(), region.width, region.height));
+    imgData      = bmp.ConvertToImage();
 
     if (!imgData.HasAlpha()) {
         wxMessageBox("Selected image has no transparency to bake.");
@@ -429,18 +433,6 @@ void MainFrame::OnBakeImage(wxCommandEvent& event) {
     const int width  = region.width;
     const int height = region.height;
 
-    // 1. Create a white, fully opaque background
-    wxImage bakedBackground(width, height, true);
-    bakedBackground.SetRGB(wxRect(0, 0, width, height), 255, 255, 255);
-    bakedBackground.InitAlpha();
-    unsigned char* alpha = bakedBackground.GetAlpha();
-    if (alpha) {
-        for (int i = 0; i < width * height; ++i) {
-            alpha[i] = 0;  // fully opaque
-        }
-    }
-
-    // 2. Collect under-images in listIndex order (bottom to top)
     std::vector<DraggableImage*> underImages;
     for (DraggableImage* otherImg : canvas->images) {
         if (!otherImg || otherImg == img || !otherImg->enabled) continue;
@@ -455,13 +447,22 @@ void MainFrame::OnBakeImage(wxCommandEvent& event) {
     // Sort by listIndex ascending (bottom to top)
     std::sort(underImages.begin(), underImages.end(),
               [](DraggableImage* a, DraggableImage* b) { return a->listIndex < b->listIndex; });
-
+    bool empty = false;
     if (underImages.empty()) {
-        wxMessageBox("No images under selected image to bake from.");
-        return;
+        empty = true;
     }
 
-    // 3. Blend each under-image onto bakedBackground
+    wxImage bakedBackground(width, height, true);
+    bakedBackground.SetRGB(wxRect(0, 0, width, height), 0, 0, 0);
+    bakedBackground.InitAlpha();
+    unsigned char* alpha = bakedBackground.GetAlpha();
+    unsigned char  a     = empty ? 255 : 0;
+    if (alpha) {
+        for (int i = 0; i < width * height; ++i) {
+            alpha[i] = a;
+        }
+    }
+
     for (DraggableImage* underImg : underImages) {
         wxImage          srcImage  = underImg->bitmap.ConvertToImage();
         const ImageData& srcRegion = underImg->data;
@@ -471,8 +472,8 @@ void MainFrame::OnBakeImage(wxCommandEvent& event) {
             for (int x = 0; x < srcRegion.width; ++x) {
                 int srcX = srcRegion.x + x;
                 int srcY = srcRegion.y + y;
-                int dstX = offset.x + x;
-                int dstY = offset.y + y;
+                int dstX = offset.x + x + srcRegion.x;
+                int dstY = offset.y + y + srcRegion.y;
 
                 if (srcX < 0 || srcY < 0 || srcX >= srcImage.GetWidth() || srcY >= srcImage.GetHeight())
                     continue;
@@ -550,7 +551,45 @@ void MainFrame::OnBakeImage(wxCommandEvent& event) {
 
     wxMessageBox("Image baked successfully.");
 }
+bool MainFrame::CheckTransparentImages() {
+    wxString Names = wxEmptyString;
+    for (DraggableImage* img : canvas->images) {
+        if (HasActualTransparency(img->bitmap) && img->includedInFile) {
+            Names += wxString::Format(" [%d] %s\n", img->data.id, img->data.name);
+        }
+    }
+    if (!Names.empty()) {
+        wxMessageDialog dlg(this, wxString::Format("The following images have transparency:\n%s \n Please bake them.",Names), "Warning!", wxYES_NO | wxCENTER | wxICON_QUESTION);
+        dlg.SetYesNoLabels("Ok", "Proceed Anyway");
+        int result = dlg.ShowModal();
+        if (result == wxID_YES) {
+            return true;
+        } else if (result == wxID_NO) {
+            return false;
+        }else {
+            return true;
+        }
+    }
 
+    return false; 
+}
+bool MainFrame::HasActualTransparency(const wxBitmap& bmp) {
+    if (!bmp.HasAlpha()) return false;
+
+    wxImage img = bmp.ConvertToImage();
+    if (!img.HasAlpha()) return false;
+
+    const unsigned char* alpha = img.GetAlpha();
+    int numPixels = img.GetWidth() * img.GetHeight();
+
+    for (int i = 0; i < numPixels; ++i) {
+        if (alpha[i] < 255) {
+            return true;
+        }
+    }
+
+    return false;
+}
 void MainFrame::OnTransColorChanged(wxColourPickerEvent& event) {
     DraggableImage* img = GetSelectedImage();
     if (!img) return;

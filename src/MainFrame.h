@@ -7,25 +7,31 @@
 #include "FileProcessor.h"
 
 class MainFrame : public MyFrame1 {
-public:
-    ImageCanvas*    canvas;
-    FileProcessing  fileProcessor;
+   public:
+    ImageCanvas*   canvas;
+    FileProcessing fileProcessor;
 
     MainFrame* mFrame;
 
     MainFrame(wxWindow* parent);
     DraggableImage* GetSelectedImage();
-    void UnpackImageData(DraggableImage* img);
+    void            UnpackImageData(DraggableImage* img);
     wxCheckListBox* GetList();
-    void EnableControls();
-    void DisableControls();
+    void            EnableControls();
+    void            DisableControls();
 
-protected:
+   protected:
+    wxString GetImageName(DraggableImage* img = nullptr, int id = -1);
+    wxBitmap AskAndStackImages(int n, wxSize targetSize);
+    wxBitmap LoadBitmap(const char* title, const wxBitmap& bitmapBefore, wxSize targetSize, bool forceContinue = false, bool* forceResize = nullptr);
+    wxBitmap CombineBitmapsVertically(const std::vector<wxBitmap>& bitmaps);
+
+    bool HasActualTransparency(const wxBitmap& bmp);
     void SetAlphaOfImage(wxBitmap& image, uint8_t transpValue);
- void OnTextChange( wxCommandEvent& event ) override;
-    wxString GetImageName(DraggableImage* img = nullptr);
+    void OnTextChange(wxCommandEvent& event) override;
+    bool CheckTransparentImages();
     void OnIncludeInFileBox(wxCommandEvent& event) override;
-    void OnTranspSlider(wxScrollEvent& event ) override;
+    void OnTranspSlider(wxScrollEvent& event) override;
     void OnImagesListToggle(wxCommandEvent& event) override;
     void OnClkUpList(wxCommandEvent& event) override;
     void OnClkDownList(wxCommandEvent& event) override;
@@ -61,9 +67,7 @@ protected:
     void MoveSelectedItemDown(wxCheckListBox* list);
     void ClearList(wxCheckListBox* list);
     void RenameSelectedItem(wxCheckListBox* list, const wxString& newLabel);
-    wxBitmap AskAndStackImages(int n, wxSize targetSize);
-    wxBitmap LoadBitmap(const char* title, const wxBitmap& bitmapBefore, wxSize targetSize, bool forceContinue = false, bool* forceResize = nullptr);
-    wxBitmap CombineBitmapsVertically(const std::vector<wxBitmap>& bitmaps);
+
     void DisableControlsInSizer(wxSizer* sizer);
     void EnableControlsInSizer(wxSizer* sizer);
 };
