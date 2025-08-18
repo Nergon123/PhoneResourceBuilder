@@ -9,7 +9,7 @@ wxString OpenFileDialog(wxWindow* parent, wxString message, const char* wildcard
 class FileProcessing {
 public:
     std::vector<DraggableImage*> imagesToExport;
-    std::vector<uint16_t> dataToExport;
+    std::vector<uint8_t> dataToExport;
 
     FileProcessing();
 
@@ -19,7 +19,7 @@ public:
     void ImportFile(std::vector<DraggableImage*>& images);
     bool SaveToFile(const std::vector<DraggableImage*>& images, bool saveas = false);
     bool LoadFromFile(std::vector<DraggableImage*>& images);
-    std::vector<uint16_t> ConvertWxImageToRGB565(const wxImage& image);
+    std::vector<uint8_t> ConvertWxImageToRGB565(const wxImage& image);
     private:
     uint32_t                   currentOffset = 0;
     Header                      globalHeader;

@@ -140,9 +140,7 @@ void MainFrame::OnExportAllPNG(wxCommandEvent& event) {
 }
 
 void MainFrame::OnExport(wxCommandEvent& event) {
-    if(!CheckTransparentImages()){
     fileProcessor.ExportFile(canvas->images);
-    }
 }
 
 void MainFrame::OnExportPNG(wxCommandEvent& event) {

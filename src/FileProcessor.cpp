@@ -40,8 +40,8 @@ void FileProcessing::ExportFile(std::vector<DraggableImage*> ExportImages) {
         printf("Image %d: Offset %u\n", img->data.id, img->data.offset);
         printf("Image %d: Size %ux%u, projected size %u\n\n", img->data.id, img->data.width, img->data.height, img->data.width * img->data.height * 2);
 
-        std::vector<uint16_t> rgb565Data = ConvertWxImageToRGB565(img->bitmap.ConvertToImage());
-        currentOffset += rgb565Data.size() * sizeof(uint16_t);
+        std::vector<uint8_t> rgb565Data = ConvertWxImageToRGB565(img->bitmap.ConvertToImage());
+        currentOffset += rgb565Data.size() * sizeof(rgb565Data[0]);
         dataToExport.insert(dataToExport.end(), rgb565Data.begin(), rgb565Data.end());
     }
     wxString fileName = wxEmptyString;
@@ -70,7 +70,7 @@ void FileProcessing::ExportFile(std::vector<DraggableImage*> ExportImages) {
             return;
         }
     }
-    file.write(reinterpret_cast<const char*>(dataToExport.data()), dataToExport.size() * sizeof(uint16_t));
+    file.write(reinterpret_cast<const char*>(dataToExport.data()), dataToExport.size() * sizeof(dataToExport[0]));
     if (!file) {
         wxLogError("Error writing image pixel data to file: %s", fileName);
         return;
@@ -343,25 +343,29 @@ bool FileProcessing::LoadFromFile(std::vector<DraggableImage*>& images) {
     return true;
 }
 
-std::vector<uint16_t> FileProcessing::ConvertWxImageToRGB565(const wxImage& image) {
+std::vector<uint8_t> FileProcessing::ConvertWxImageToRGB565(const wxImage& image) {
     int                  width   = image.GetWidth();
     int                  height  = image.GetHeight();
     const unsigned char* rgbData = image.GetData();
-
-    std::vector<uint16_t> rgb565Data;
-    rgb565Data.reserve(width * height);
-
+    const unsigned char* alphaData = image.GetAlpha();
+    std::vector<uint8_t> rgb565Data;
+    rgb565Data.reserve(width * height * 3);
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             int     index = (y * width + x) * 3;
             uint8_t r     = rgbData[index];
             uint8_t g     = rgbData[index + 1];
             uint8_t b     = rgbData[index + 2];
+            uint8_t a     = alphaData[index];  // Get alpha value
 
             // Convert to RGB565
-            uint16_t rgb565 = wxColourToRGB565(wxColor(r, g, b)); 
-
-            rgb565Data.push_back(rgb565);
+            uint16_t rgb565 = wxColourToRGB565(wxColor(r, g, b));
+            //divide rgb565 into 2 uint8_t 
+            uint8_t rgb565Low = rgb565 & 0xFF;
+            uint8_t rgb565High = (rgb565 >> 8) & 0xFF;
+            rgb565Data.push_back(rgb565Low);
+            rgb565Data.push_back(rgb565High);
+            rgb565Data.push_back(a);
         }
     }
 
