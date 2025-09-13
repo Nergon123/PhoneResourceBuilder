@@ -7,7 +7,7 @@ uint16_t wxColourToRGB565(const wxColour& col) {
     uint16_t color = ((col.Red() >> 3) << 11) |
                      ((col.Green() >> 2) << 5) |
                      (col.Blue() >> 3);
-                     
+
     return (color << 8) | (color >> 8);
 }
 
@@ -46,13 +46,13 @@ const char ImageNames[32][DEFAULTS_COUNT] = {
     "Full screen Notification",     // 17
     "Context Menu Background",      // 18
     "Background of ListMenu",       // 19
-    "Menu Background (Unused)",     // 20
+    "Incoming call font",           // 20
     "Call animation dots",          // 21
     "Voice Only label",             // 22
     "Phone incoming call icon",     // 23
     "Lightning for incoming call",  // 24
     "Folder icon",                  // 25
-    "File icon",                    // 26
+    "Outgoing call font",           // 26
     "Boot Logo"                     // 27
 };
 

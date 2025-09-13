@@ -400,7 +400,7 @@ void MainFrame::OnHardBake(wxCommandEvent& event) {
         for (int x = 0; x < width; ++x) {
             if (x < 0 || y < 0 || x >= imgData.GetWidth() || y >= imgData.GetHeight())
                 continue;
-            if (imgData.GetAlpha(x, y) < 128) {
+            if (imgData.GetAlpha(x, y) < 64) {
                 wxColor transparentColor = ColorPicker->GetColour();
                 imgData.SetRGB(x, y, transparentColor.Red(), transparentColor.Green(), transparentColor.Blue());
             }
@@ -415,139 +415,86 @@ void MainFrame::OnBakeImage(wxCommandEvent& event) {
     DraggableImage* img = GetSelectedImage();
     if (!img || !img->enabled) return;
 
-    const ImageData& region = img->data;
-    wxImage          imgData;
-    if (imgData.IsOk()) {
-        imgData.Clear();  // For some reason this thing without this line is taking previous image data
-    }
-    wxBitmap bmp = img->bitmap.GetSubBitmap(wxRect(0, region.height * IndexControl->GetValue(), region.width, region.height));
-    imgData      = bmp.ConvertToImage();
+    const wxRect reg(img->pos.x, img->pos.y, img->data.width, img->bitmap.GetHeight());
+    wxBitmap     bitImageResult(reg.width, reg.height);
+    wxImage      imageResult = bitImageResult.ConvertToImage();
+    // imageResult.Create(reg.width,reg.height);
+    imageResult.InitAlpha();
 
-    if (!imgData.HasAlpha()) {
-        wxMessageBox("Selected image has no transparency to bake.");
-        return;
-    }
+    //  //printf("out of first 'for'\n");
+    for (int fr = 0; fr < img->data.count; fr++) {
+        for (int i = 0; i <= img->listIndex; i++) {
+            DraggableImage* currImg = static_cast<DraggableImage*>(currentImagesCheckList->GetClientData(i));
+            if (!currImg) continue;
 
-    const int width  = region.width;
-    const int height = region.height;
+            // printf("%p\n ", currImg);
+            wxRect currRect = wxRect(currImg->pos.x, currImg->pos.y, currImg->data.width, currImg->data.height);
+            if (!currRect.Intersects(reg)) continue;
 
-    std::vector<DraggableImage*> underImages;
-    for (DraggableImage* otherImg : canvas->images) {
-        if (!otherImg || otherImg == img || !otherImg->enabled) continue;
-        if (otherImg->listIndex < img->listIndex &&
-            img->pos.x < otherImg->pos.x + otherImg->data.width &&
-            img->pos.x + region.width > otherImg->pos.x &&
-            img->pos.y < otherImg->pos.y + otherImg->data.height &&
-            img->pos.y + region.height > otherImg->pos.y) {
-            underImages.push_back(otherImg);
-        }
-    }
-    // Sort by listIndex ascending (bottom to top)
-    std::sort(underImages.begin(), underImages.end(),
-              [](DraggableImage* a, DraggableImage* b) { return a->listIndex < b->listIndex; });
-    bool empty = false;
-    if (underImages.empty()) {
-        empty = true;
-    }
+            wxRect intersect = reg.Intersect(currRect);
+            // printf("intersect's x:%d y:%d width:%d height:%d", intersect.x, intersect.y, intersect.width, intersect.height);
+            if (!currImg->enabled) continue;
 
-    wxImage bakedBackground(width, height, true);
-    bakedBackground.SetRGB(wxRect(0, 0, width, height), 0, 0, 0);
-    bakedBackground.InitAlpha();
-    unsigned char* alpha = bakedBackground.GetAlpha();
-    unsigned char  a     = empty ? 255 : 0;
-    if (alpha) {
-        for (int i = 0; i < width * height; ++i) {
-            alpha[i] = a;
-        }
-    }
-
-    for (DraggableImage* underImg : underImages) {
-        wxImage          srcImage  = underImg->bitmap.ConvertToImage();
-        const ImageData& srcRegion = underImg->data;
-        wxPoint          offset    = underImg->pos - img->pos;  // Relative position
-
-        for (int y = 0; y < srcRegion.height; ++y) {
-            for (int x = 0; x < srcRegion.width; ++x) {
-                int srcX = srcRegion.x + x;
-                int srcY = srcRegion.y + y;
-                int dstX = offset.x + x + srcRegion.x;
-                int dstY = offset.y + y + srcRegion.y;
-
-                if (srcX < 0 || srcY < 0 || srcX >= srcImage.GetWidth() || srcY >= srcImage.GetHeight())
-                    continue;
-                if (dstX < 0 || dstY < 0 || dstX >= width || dstY >= height)
-                    continue;
-
-                unsigned char srcR = srcImage.GetRed(srcX, srcY);
-                unsigned char srcG = srcImage.GetGreen(srcX, srcY);
-                unsigned char srcB = srcImage.GetBlue(srcX, srcY);
-                unsigned char srcA = srcImage.HasAlpha() ? srcImage.GetAlpha(srcX, srcY) : 255;
-
-                unsigned char dstR = bakedBackground.GetRed(dstX, dstY);
-                unsigned char dstG = bakedBackground.GetGreen(dstX, dstY);
-                unsigned char dstB = bakedBackground.GetBlue(dstX, dstY);
-                unsigned char dstA = bakedBackground.GetAlpha(dstX, dstY);
-
-                float srcAlpha = srcA / 255.0f;
-                float dstAlpha = dstA / 255.0f;
-                float outAlpha = srcAlpha + dstAlpha * (1.0f - srcAlpha);
-
-                unsigned char outR, outG, outB, outA;
-                if (outAlpha > 0.0f) {
-                    outR = static_cast<unsigned char>((srcR * srcAlpha + dstR * dstAlpha * (1.0f - srcAlpha)) / outAlpha);
-                    outG = static_cast<unsigned char>((srcG * srcAlpha + dstG * dstAlpha * (1.0f - srcAlpha)) / outAlpha);
-                    outB = static_cast<unsigned char>((srcB * srcAlpha + dstB * dstAlpha * (1.0f - srcAlpha)) / outAlpha);
-                    outA = static_cast<unsigned char>(outAlpha * 255);
-                } else {
-                    outR = outG = outB = 0;
-                    outA               = 0;
-                }
-
-                bakedBackground.SetRGB(dstX, dstY, outR, outG, outB);
-                bakedBackground.SetAlpha(dstX, dstY, outA);
-            }
-        }
-    }
-
-    // 4. Blend bakedBackground into all non-fully-opaque pixels of selected image
-    for (int y = 0; y < region.height; ++y) {
-        for (int x = 0; x < region.width; ++x) {
-            int imgX = x;
-            int imgY = y;
-            if (imgX < 0 || imgY < 0 || imgX >= imgData.GetWidth() || imgY >= imgData.GetHeight())
-                continue;
-            unsigned char fgR = imgData.GetRed(imgX, imgY);
-            unsigned char fgG = imgData.GetGreen(imgX, imgY);
-            unsigned char fgB = imgData.GetBlue(imgX, imgY);
-            unsigned char fgA = imgData.HasAlpha() ? imgData.GetAlpha(imgX, imgY) : 255;
-            if (fgA == 255) continue;  // fully opaque, leave as is
-            unsigned char bgR      = bakedBackground.GetRed(x, y);
-            unsigned char bgG      = bakedBackground.GetGreen(x, y);
-            unsigned char bgB      = bakedBackground.GetBlue(x, y);
-            unsigned char bgA      = bakedBackground.GetAlpha(x, y);
-            float         fgAlpha  = fgA / 255.0f;
-            float         bgAlpha  = bgA / 255.0f;
-            float         outAlpha = fgAlpha + bgAlpha * (1.0f - fgAlpha);
-            unsigned char outR, outG, outB, outA;
-            if (outAlpha > 0.0f) {
-                outR = static_cast<unsigned char>((fgR * fgAlpha + bgR * bgAlpha * (1.0f - fgAlpha)) / outAlpha);
-                outG = static_cast<unsigned char>((fgG * fgAlpha + bgG * bgAlpha * (1.0f - fgAlpha)) / outAlpha);
-                outB = static_cast<unsigned char>((fgB * fgAlpha + bgB * bgAlpha * (1.0f - fgAlpha)) / outAlpha);
-                outA = static_cast<unsigned char>(outAlpha * 255);
+            // wxMessageBox(wxString::Format("%s\n", currImg->data.name));
+            wxBitmap bitIntersect;
+            bool     lastImage = i == img->listIndex;
+            if (lastImage) {
+                bitIntersect = img->bitmap.GetSubBitmap(wxRect(0, img->data.height * fr, img->data.width, img->data.height));
             } else {
-                outR = outG = outB = 0;
-                outA               = 0;
+                bitIntersect = currImg->bitmap.GetSubBitmap(wxRect(intersect.x - currImg->data.x, intersect.y - currImg->data.y + currImg->data.height * currImg->index, intersect.width, intersect.height));
             }
-            imgData.SetRGB(imgX, imgY, outR, outG, outB);
-            imgData.SetAlpha(imgX, imgY, outA);
+            if (!bitIntersect.IsOk()) continue;
+            wxImage wxprImage = bitIntersect.ConvertToImage();
+            for (int y = 0; y < intersect.height; y++) {
+                for (int x = 0; x < intersect.width; x++) {
+                    int rx = x + intersect.x - img->data.x,
+                        ry = y + intersect.y - img->data.y;
+                    // wxMessageBox(wxString::Format("rx %d ry %d\nw %d h %d\nimg pos %d %d\nname %s\nix %d iy %d",
+                    //     rx, ry,
+                    //     intersect.width, intersect.height,
+                    //     img->data.x, img->data.y,
+                    //     img->data.name,
+                    //     intersect.x,intersect.y), "poses");
+
+                    u_char srcR = wxprImage.GetRed(x, y);
+                    u_char srcG = wxprImage.GetGreen(x, y);
+                    u_char srcB = wxprImage.GetBlue(x, y);
+                    u_char srcA = wxprImage.HasAlpha() ? wxprImage.GetAlpha(x, y) : 0xFF;  // lastImage ? y + yfr :
+
+                    u_char dstR = imageResult.GetRed(rx, ry);
+                    u_char dstG = imageResult.GetGreen(rx, ry);
+                    u_char dstB = imageResult.GetBlue(rx, ry);
+                    u_char dstA = 0xFF;
+
+                    // Normalize alpha to [0, 1]
+                    float fSrcA = srcA / 255.0f;
+                    float fDstA = dstA / 255.0f;
+
+                    // Output alpha
+                    float outAlpha = fSrcA + fDstA * (1.0f - fSrcA);
+                    if (outAlpha == 0.0f) outAlpha = 1.0f;  // Prevent division by zero
+
+                    // Blend channels
+                    u_char outR = static_cast<u_char>((srcR * fSrcA + dstR * fDstA * (1.0f - fSrcA)) / outAlpha);
+                    u_char outG = static_cast<u_char>((srcG * fSrcA + dstG * fDstA * (1.0f - fSrcA)) / outAlpha);
+                    u_char outB = static_cast<u_char>((srcB * fSrcA + dstB * fDstA * (1.0f - fSrcA)) / outAlpha);
+
+                    // std::cout
+                    //     << "imgres height: " << imageResult.GetHeight()
+                    //     << ", y: ry" << ry << " + imgh*fr" << img->data.height * fr << " = " << ry + img->data.height * fr
+                    //     << ", fr: " << fr
+                    //     << std::endl;
+
+                    // самая тупая строка
+                    if (ry + img->data.height * fr >= imageResult.GetHeight()) continue;
+                    // --
+
+                    imageResult.SetRGB(rx, ry + img->data.height * fr, outR, outG, outB);
+                }
+            }
         }
     }
-
-    // Update bitmap and refresh canvas
-    img->bitmap = wxBitmap(imgData);
-    canvas->Refresh();
-
-    wxMessageBox("Image baked successfully.");
+    img->bitmap = imageResult;
 }
 bool MainFrame::CheckTransparentImages() {
     wxString Names = wxEmptyString;
@@ -557,19 +504,19 @@ bool MainFrame::CheckTransparentImages() {
         }
     }
     if (!Names.empty()) {
-        wxMessageDialog dlg(this, wxString::Format("The following images have transparency:\n%s \n Please bake them.",Names), "Warning!", wxYES_NO | wxCENTER | wxICON_QUESTION);
+        wxMessageDialog dlg(this, wxString::Format("The following images have transparency:\n%s \n Please bake them.", Names), "Warning!", wxYES_NO | wxCENTER | wxICON_QUESTION);
         dlg.SetYesNoLabels("Ok", "Proceed Anyway");
         int result = dlg.ShowModal();
         if (result == wxID_YES) {
             return true;
         } else if (result == wxID_NO) {
             return false;
-        }else {
+        } else {
             return true;
         }
     }
 
-    return false; 
+    return false;
 }
 bool MainFrame::HasActualTransparency(const wxBitmap& bmp) {
     if (!bmp.HasAlpha()) return false;
@@ -577,8 +524,8 @@ bool MainFrame::HasActualTransparency(const wxBitmap& bmp) {
     wxImage img = bmp.ConvertToImage();
     if (!img.HasAlpha()) return false;
 
-    const unsigned char* alpha = img.GetAlpha();
-    int numPixels = img.GetWidth() * img.GetHeight();
+    const unsigned char* alpha     = img.GetAlpha();
+    int                  numPixels = img.GetWidth() * img.GetHeight();
 
     for (int i = 0; i < numPixels; ++i) {
         if (alpha[i] < 255) {
