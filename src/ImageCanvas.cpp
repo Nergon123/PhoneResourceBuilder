@@ -86,7 +86,7 @@ ImageData Defaults[DEFAULTS_COUNT] = {
     ImageData( 24,    2,    73,    90,   13,     14,       0,     0b01,      0xD6BA   ,ImageNames[24]),      // Lightning incoming call animation
     ImageData( 25,    1,    0,     0,    18,     18,       0,     0b11,      0x0000   ,ImageNames[25]),      // Folder icon //TODO CHECK TRANSPARENCY
     ImageData( 26,    1,    0,     0,    18,     18,       0,     0b11,      0x0000   ,ImageNames[26]),      // File icon   //TODO CHECK TRANSPARENCY
-    ImageData( 27,    1,    50,    85,   140,    135,      0,     0b00,      0x0000   ,ImageNames[27])       // Boot Logo
+    ImageData( 27,    1,    50,    85,   140,    140,      0,     0b00,      0x0000   ,ImageNames[27])       // Boot Logo
 };
 
 ImageCanvas::ImageCanvas(wxWindow* parent)

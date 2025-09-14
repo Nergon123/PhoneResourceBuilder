@@ -70,6 +70,7 @@ void MainFrame::DisableControls() {
 }
 
 void MainFrame::OnImagesListToggle(wxCommandEvent& event) {
+
     DraggableImage* img = GetSelectedImage();
     if (!img) return;
     img->enabled = currentImagesCheckList->IsChecked(img->listIndex);

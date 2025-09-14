@@ -1,6 +1,7 @@
 #include "FileProcessor.h"
 #include "ImageCanvas.h"
 
+
 wxString OpenFileDialog(wxWindow* parent, wxString message = "Open Phone Resource File", const char* wildcard = "Phone Resource Files (*" FILE_EXTENSION ")|*" FILE_EXTENSION) {
     wxFileDialog openFileDialog(parent, message, "", "", wildcard, wxFD_OPEN | wxFD_FILE_MUST_EXIST);
     if (openFileDialog.ShowModal() == wxID_CANCEL) {
@@ -256,6 +257,7 @@ bool FileProcessing::SaveToFile(const std::vector<DraggableImage*>& images, bool
 bool FileProcessing::LoadFromFile(std::vector<DraggableImage*>& images) {
     wxString filename = OpenFileDialog(nullptr, "Open Project File", "Project Files (*" PROJECT_EXTENSION ")|*" PROJECT_EXTENSION);
     if (filename.IsEmpty()) return false;
+    if (!wxFileExists(filename)) return false;
     filePath = filename;  // Store the file path for future saves
     std::ifstream in(filename, std::ios::binary);
     if (!in) return false;
@@ -344,28 +346,25 @@ bool FileProcessing::LoadFromFile(std::vector<DraggableImage*>& images) {
 }
 
 std::vector<uint8_t> FileProcessing::ConvertWxImageToRGB565(const wxImage& image) {
-    int                  width   = image.GetWidth();
-    int                  height  = image.GetHeight();
-    const unsigned char* rgbData = image.GetData();
-    const unsigned char* alphaData = image.GetAlpha();
+    int                  width     = image.GetWidth();
+    int                  height    = image.GetHeight();
+    const unsigned char* rgbData   = image.GetData();
     std::vector<uint8_t> rgb565Data;
-    rgb565Data.reserve(width * height * 3);
+    rgb565Data.reserve(width * height * 2);
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             int     index = (y * width + x) * 3;
             uint8_t r     = rgbData[index];
             uint8_t g     = rgbData[index + 1];
             uint8_t b     = rgbData[index + 2];
-            uint8_t a     = alphaData[index];  // Get alpha value
 
             // Convert to RGB565
             uint16_t rgb565 = wxColourToRGB565(wxColor(r, g, b));
-            //divide rgb565 into 2 uint8_t 
-            uint8_t rgb565Low = rgb565 & 0xFF;
+            // divide rgb565 into 2 uint8_t
+            uint8_t rgb565Low  = rgb565 & 0xFF;
             uint8_t rgb565High = (rgb565 >> 8) & 0xFF;
             rgb565Data.push_back(rgb565Low);
             rgb565Data.push_back(rgb565High);
-            rgb565Data.push_back(a);
         }
     }
 
