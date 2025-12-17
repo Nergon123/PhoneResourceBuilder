@@ -70,7 +70,6 @@ void MainFrame::DisableControls() {
 }
 
 void MainFrame::OnImagesListToggle(wxCommandEvent& event) {
-
     DraggableImage* img = GetSelectedImage();
     if (!img) return;
     img->enabled = currentImagesCheckList->IsChecked(img->listIndex);
@@ -539,7 +538,8 @@ bool MainFrame::HasActualTransparency(const wxBitmap& bmp) {
 void MainFrame::OnTransColorChanged(wxColourPickerEvent& event) {
     DraggableImage* img = GetSelectedImage();
     if (!img) return;
-    img->data.transpColor = wxColourToRGB565(ColorPicker->GetColour());
+    uint16_t transpColor = wxColourToRGB565(ColorPicker->GetColour());
+    img->data.transpColor = (transpColor >> 8) | (transpColor << 8);
 }
 
 void MainFrame::OnUpdateTrans(wxCommandEvent& event) {

@@ -1,7 +1,6 @@
 #include "FileProcessor.h"
 #include "ImageCanvas.h"
 
-
 wxString OpenFileDialog(wxWindow* parent, wxString message = "Open Phone Resource File", const char* wildcard = "Phone Resource Files (*" FILE_EXTENSION ")|*" FILE_EXTENSION) {
     wxFileDialog openFileDialog(parent, message, "", "", wildcard, wxFD_OPEN | wxFD_FILE_MUST_EXIST);
     if (openFileDialog.ShowModal() == wxID_CANCEL) {
@@ -346,9 +345,9 @@ bool FileProcessing::LoadFromFile(std::vector<DraggableImage*>& images) {
 }
 
 std::vector<uint8_t> FileProcessing::ConvertWxImageToRGB565(const wxImage& image) {
-    int                  width     = image.GetWidth();
-    int                  height    = image.GetHeight();
-    const unsigned char* rgbData   = image.GetData();
+    int                  width   = image.GetWidth();
+    int                  height  = image.GetHeight();
+    const unsigned char* rgbData = image.GetData();
     std::vector<uint8_t> rgb565Data;
     rgb565Data.reserve(width * height * 2);
     for (int y = 0; y < height; ++y) {
