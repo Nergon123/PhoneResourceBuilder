@@ -3,7 +3,7 @@
 #include <vector>
 #include <fstream>
 #include <wx/wx.h>
-
+#include <zlib.h>
 wxString SaveFileDialog(wxWindow* parent, wxString message, const char* wildcard );
 wxString OpenFileDialog(wxWindow* parent, wxString message, const char* wildcard );
 class FileProcessing {

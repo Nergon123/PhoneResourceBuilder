@@ -56,25 +56,49 @@ void FileProcessing::ExportFile(std::vector<DraggableImage*> ExportImages) {
     }
 
     // Write header
-    file.write(reinterpret_cast<const char*>(&globalHeader), sizeof(Header));
-    if (!file) {
-        wxLogError("Error writing header to file: %s", fileName);
-        return;
-    }
+    std::string fileSTR;
+    fileSTR.append(reinterpret_cast<const char*>(&globalHeader), sizeof(Header));
+
+    // file.write(reinterpret_cast<const char*>(&globalHeader), sizeof(Header));
+    // if (!file) {
+    //     wxLogError("Error writing header to file: %s", fileName);
+    //     return;
+    // }
 
     // Write image data
     for (const DraggableImage* img : images) {
-        file.write(reinterpret_cast<const char*>(&img->data), sizeof(ImageData));
-        if (!file) {
-            wxLogError("Error writing image data to file: %s", fileName);
-            return;
-        }
+        fileSTR.append(reinterpret_cast<const char*>(&img->data), sizeof(ImageData));
+        //    file.write(reinterpret_cast<const char*>(&img->data), sizeof(ImageData));
+        //    if (!file) {
+        //        wxLogError("Error writing image data to file: %s", fileName);
+        //        return;
+        //    }
     }
-    file.write(reinterpret_cast<const char*>(dataToExport.data()), dataToExport.size() * sizeof(dataToExport[0]));
+    fileSTR.append(reinterpret_cast<const char*>(dataToExport.data()), dataToExport.size() * sizeof(dataToExport[0]));
+    // file.write(reinterpret_cast<const char*>(dataToExport.data()), dataToExport.size() * sizeof(dataToExport[0]));
+    // if (!file) {
+    //     wxLogError("Error writing image pixel data to file: %s", fileName);
+    //     return;
+    // }
+    uint32_t checksum = crc32(0, reinterpret_cast<const Bytef*>(fileSTR.data()),
+                              fileSTR.size());
+    file.write(fileSTR.c_str(), fileSTR.size());
     if (!file) {
-        wxLogError("Error writing image pixel data to file: %s", fileName);
+        wxLogError("Error writing to file %s", fileName);
         return;
     }
+    file.write("CRC32:", 6);
+    if (!file) {
+        wxLogError("Error writing to file %s", fileName);
+        return;
+    }
+
+    file.write(reinterpret_cast<const char*>(&checksum), sizeof(checksum));
+    if (!file) {
+        wxLogError("Error writing to file %s", fileName);
+        return;
+    }
+    printf("CHECKSUM: 0x%08X\n", checksum);
 }
 
 void FileProcessing::ExportImage(DraggableImage* img) {

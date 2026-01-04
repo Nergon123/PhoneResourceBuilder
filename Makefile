@@ -2,8 +2,8 @@
 
 # Compiler and flags
 CXX := g++
-WX_FLAGS := `wx-config --cxxflags --libs`
-CXXFLAGS := -Wall -g
+WX_FLAGS := `wx-config --cxxflags --libs` -lz
+CXXFLAGS := -Wall -g 
 
 # Source and target
 SRC := main.cpp \
