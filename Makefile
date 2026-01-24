@@ -1,46 +1,122 @@
-# Makefile for wxWidgets image editor
+# =====================
+# Platform selection
+# =====================
+PLATFORM ?= linux
 
-# Compiler and flags
-CXX := g++
-WX_FLAGS := `wx-config --cxxflags --libs` -lz
-CXXFLAGS := -Wall -g 
+# =====================
+# Compilers
+# =====================
+ifeq ($(PLATFORM),windows)
+    SYSROOT    := /usr/x86_64-w64-mingw32
+    CXX        := x86_64-w64-mingw32-g++
+    CC         := x86_64-w64-mingw32-gcc
+    WX_CONFIG  := /opt/wxwidgets-win/bin/wx-config
+    TARGET     := image_editor.exe
+    RUN_CMD    := wine $(TARGET)
+    STATIC     := -static -static-libgcc -static-libstdc++ -mwindows
+    CXXFLAGS   := -Wall -g -I$(SYSROOT)/include
+    CFLAGS     := -Wall -g -I$(SYSROOT)/include
+    LIBS       :=   # no zlib needed, using standalone crc32
+else
+    CXX        := g++
+    CC         := gcc
+    WX_CONFIG  := wx-config
+    TARGET     := image_editor
+    RUN_CMD    := ./$(TARGET)
+    STATIC     :=
+    CXXFLAGS   := -Wall -g
+    CFLAGS     := -Wall -g
+    LIBS       :=
+endif
 
-# Source and target
-SRC := main.cpp \
-	   ImageCanvas.cpp \
-	   FileProcessor.cpp \
-       MainFrame.cpp \
-       MyProjectBase.cpp \
-       SpriteFormBase.cpp \
-       SpriteForm.cpp
+# =====================
+# Flags from wx-config
+# =====================
+WX_CXXFLAGS := $(shell $(WX_CONFIG) --cxxflags)
+WX_LIBS     := $(shell $(WX_CONFIG) --libs)
+
+# =====================
+# Sources
+# =====================
 SRCDIR := src
-OBJDIR := obj
-OBJ := $(addprefix $(OBJDIR)/, $(SRC:.cpp=.o))
-TARGET := image_editor
+OBJDIR := obj/$(PLATFORM)
 
-# Default rule
+# C++ sources (relative to SRCDIR)
+SRC := \
+    main.cpp \
+    ImageCanvas.cpp \
+    FileProcessor.cpp \
+    MainFrame.cpp \
+    MyProjectBase.cpp \
+    SpriteFormBase.cpp \
+    SpriteForm.cpp
+
+# C sources (relative to SRCDIR)
+SRC_C := \
+    External/crc32.c
+
+# Object files
+OBJ   := $(addprefix $(OBJDIR)/, $(SRC:.cpp=.o))
+OBJ_C := $(addprefix $(OBJDIR)/, $(SRC_C:.c=.o))
+ALL_OBJ := $(OBJ) $(OBJ_C)
+
+# Source files with full paths
+SRC_FULL   := $(addprefix $(SRCDIR)/, $(SRC))
+SRC_C_FULL := $(addprefix $(SRCDIR)/, $(SRC_C))
+
+# =====================
+# Targets
+# =====================
+.PHONY: all linux windows run debug clean
+
 all: $(TARGET)
 
+linux:
+	$(MAKE) PLATFORM=linux
+
+windows:
+	$(MAKE) PLATFORM=windows
+
 run: $(TARGET)
-	./$(TARGET)
+	$(RUN_CMD)
 
 debug: $(TARGET)
+ifeq ($(PLATFORM),windows)
+	wine gdb $(TARGET)
+else
 	gdb --args ./$(TARGET)
+endif
 
-# Ensure obj directory exists before compiling
-$(OBJ): | $(OBJDIR)
+# =====================
+# Build rules
+# =====================
 
+# Create object directories
 $(OBJDIR):
-	mkdir -p $(OBJDIR)
+	mkdir -p $@
 
-# Link
-$(TARGET): $(OBJ)
-	$(CXX) $(OBJ) -o $(TARGET) $(WX_FLAGS)
+# Compile C++ sources
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
+	@echo "Compiling C++: $<"
+	$(CXX) $(CXXFLAGS) $(WX_CXXFLAGS) -c $< -o $@
 
-# Compile
-$(OBJDIR)/%.o: $(SRCDIR)/%.cpp
-	$(CXX) $(CXXFLAGS) $(WX_FLAGS) -c $< -o $@
+# Compile C sources (for files in subdirectories)
+$(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
+	@mkdir -p $(dir $@)
+	@echo "Compiling C: $<"
+	$(CC) $(CFLAGS) -c $< -o $@
 
-# Clean up
+# Link final executable
+$(TARGET): $(ALL_OBJ)
+	@echo "Linking $@"
+	$(CXX) $(ALL_OBJ) -o $@ $(WX_LIBS) $(LIBS) $(STATIC)
+
+# =====================
+# Cleanup
+# =====================
 clean:
-	rm -f $(OBJ) $(TARGET)
+	rm -rf obj $(TARGET) image_editor image_editor.exe
+
+# Debug target to print variables
+print-%:
+	@echo '$*=$($*)'

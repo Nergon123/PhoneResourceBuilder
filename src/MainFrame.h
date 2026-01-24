@@ -5,7 +5,7 @@
 #include "ImageCanvas.h"
 #include "MyProjectBase.h"
 #include "FileProcessor.h"
-
+#define ulong unsigned long
 class MainFrame : public MyFrame1 {
    public:
     ImageCanvas*   canvas;

@@ -80,7 +80,7 @@ void FileProcessing::ExportFile(std::vector<DraggableImage*> ExportImages) {
     //     wxLogError("Error writing image pixel data to file: %s", fileName);
     //     return;
     // }
-    uint32_t checksum = crc32(0, reinterpret_cast<const Bytef*>(fileSTR.data()),
+    uint32_t checksum = crc32(0, reinterpret_cast<const unsigned char*>(fileSTR.data()),
                               fileSTR.size());
     file.write(fileSTR.c_str(), fileSTR.size());
     if (!file) {
@@ -282,7 +282,7 @@ bool FileProcessing::LoadFromFile(std::vector<DraggableImage*>& images) {
     if (filename.IsEmpty()) return false;
     if (!wxFileExists(filename)) return false;
     filePath = filename;  // Store the file path for future saves
-    std::ifstream in(filename, std::ios::binary);
+    std::ifstream in(filename.ToStdString(), std::ios::binary);
     if (!in) return false;
 
     // Read header

@@ -488,8 +488,6 @@ void SpriteForm::OnContinue(wxCommandEvent& event) {
         }
         memDC.SelectObject(wxNullBitmap);
 
-        stacked.SaveFile(wxString(get_current_dir_name()) + "/sprite_sheet_.png", wxBITMAP_TYPE_PNG);
-
         // Apply the resized bitmap to dragImage->bitmap with the specified dimensions
         if (stacked.IsOk()) {
             dragImage->spriteSheetSize = selectionSize;
