@@ -1,4 +1,5 @@
 #include <vector>
+
 #include <wx/wx.h>
 #include <wx/dcbuffer.h>
 #include <wx/spinctrl.h>
@@ -9,12 +10,11 @@
 #include <wx/choice.h>
 #include <fstream>
 
+
 #include <cstdint>
 #include "ImageCanvas.h"
 #include "SpriteForm.h"
 #include "MainFrame.h"
-
-
 
 class MyApp : public wxApp {
    public:

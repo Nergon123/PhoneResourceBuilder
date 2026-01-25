@@ -7,10 +7,12 @@ PLATFORM ?= linux
 # Compilers
 # =====================
 ifeq ($(PLATFORM),windows)
+    WINDRES := x86_64-w64-mingw32-windres
     SYSROOT    := /usr/x86_64-w64-mingw32
     CXX        := x86_64-w64-mingw32-g++
     CC         := x86_64-w64-mingw32-gcc
     WX_CONFIG  := /opt/wxwidgets-win/bin/wx-config
+    WX_INCLUDE := /opt/wxwidgets-win/include/wx-3.3
     TARGET     := image_editor.exe
     RUN_CMD    := wine $(TARGET)
     STATIC     := -static -static-libgcc -static-libstdc++ -mwindows
@@ -91,6 +93,14 @@ endif
 # Build rules
 # =====================
 
+APP_RC := $(SRCDIR)/app.rc
+APP_RC_OBJ := $(OBJDIR)/app_rc.o
+
+# Compile the resource
+$(APP_RC_OBJ): $(APP_RC) | $(OBJDIR)
+	$(WINDRES) -I$(WX_INCLUDE) $< -O coff  -o $@ 
+
+
 # Create object directories
 $(OBJDIR):
 	mkdir -p $@
@@ -107,9 +117,9 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Link final executable
-$(TARGET): $(ALL_OBJ)
+$(TARGET): $(ALL_OBJ) $(APP_RC_OBJ)
 	@echo "Linking $@"
-	$(CXX) $(ALL_OBJ) -o $@ $(WX_LIBS) $(LIBS) $(STATIC)
+	$(CXX) $(ALL_OBJ) $(APP_RC_OBJ) -o $@ $(WX_LIBS) $(LIBS) $(STATIC)
 
 # =====================
 # Cleanup
