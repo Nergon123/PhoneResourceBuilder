@@ -92,14 +92,15 @@ endif
 # =====================
 # Build rules
 # =====================
-
+# Compile the resource
+ifeq (PLATFORM, windows)
 APP_RC := $(SRCDIR)/app.rc
 APP_RC_OBJ := $(OBJDIR)/app_rc.o
 
-# Compile the resource
+
 $(APP_RC_OBJ): $(APP_RC) | $(OBJDIR)
 	$(WINDRES) -I$(WX_INCLUDE) $< -O coff  -o $@ 
-
+endif
 
 # Create object directories
 $(OBJDIR):
@@ -116,11 +117,16 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	@echo "Compiling C: $<"
 	$(CC) $(CFLAGS) -c $< -o $@
 
+ifeq (PLATFORM, windows)
 # Link final executable
 $(TARGET): $(ALL_OBJ) $(APP_RC_OBJ)
 	@echo "Linking $@"
 	$(CXX) $(ALL_OBJ) $(APP_RC_OBJ) -o $@ $(WX_LIBS) $(LIBS) $(STATIC)
-
+else
+$(TARGET): $(ALL_OBJ)
+	@echo "Linking $@"
+	$(CXX) $(ALL_OBJ) -o $@ $(WX_LIBS) $(LIBS) $(STATIC)
+endif
 # =====================
 # Cleanup
 # =====================
